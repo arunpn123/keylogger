@@ -23,7 +23,7 @@ To uninstall the keylogger module:
 
 TODO:
 
-1. Figure out how to get status of Capslock key. Since this module could be loaded when the capslock key is already depressed, we cannot depend on just listening for Capslock key press event.
+1. Figure out how to get status of Capslock key. Since this module could be loaded when the capslock is already enabled, we cannot depend on just listening for Capslock key press event.
 
 2. Keep configuration info like keycode to ascii mapping separately. And load it at runtime.
 
